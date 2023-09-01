@@ -689,4 +689,107 @@ var flower = (function () {
 
     });
 
+    $(document).ready(function () {
+        if (!active_page('/results')) {
+            return;
+        }
+
+        $('#results-table').DataTable({
+            rowId: 'task_id',
+            searching: true,
+            scrollX: true,
+            scrollCollapse: true,
+            processing: true,
+            serverSide: true,
+            colReorder: true,
+            lengthMenu: [15, 30, 50, 100],
+            pageLength: 15,
+            language: {
+                lengthMenu: 'Show _MENU_ results',
+                info: 'Showing _START_ to _END_ of _TOTAL_ results',
+                infoFiltered: '(filtered from _MAX_ total results)'
+            },
+            ajax: {
+                type: 'POST',
+                url: url_prefix() + '/results/datatable'
+            },
+            order: [
+                [2, "desc"]
+            ],
+            oSearch: {
+                // TODO: do we need to change `state` here?
+                "sSearch": $.urlParam('state') ? 'state:' + $.urlParam('state') : ''
+            },
+            columnDefs: [{
+                targets: 0,
+                data: 'task_id',
+                visible: isColumnVisible('task_id'),
+                orderable: false,
+                className: "text-nowrap",
+                render: function (data, type, full, meta) {
+                    return '<a href="' + url_prefix() + '/results/' + encodeURIComponent(data) + '">' + data + '</a>';
+                }
+            }, {
+                targets: 1,
+                data: 'name',
+                visible: isColumnVisible('name'),
+                render: function (data, type, full, meta) {
+                    return data;
+                }
+            }, {
+                targets: 2,
+                data: 'date_done',
+                className: "text-nowrap",
+                visible: isColumnVisible('date_done'),
+                render: function (data, type, full, meta) {
+                    if (data) {
+                        return format_time(data);
+                    }
+                    return data;
+                }
+            }, {
+                targets: 3,
+                data: 'status',
+                visible: isColumnVisible('status'),
+                className: "text-center",
+                render: function (data, type, full, meta) {
+                    switch (data) {
+                    case 'SUCCESS':
+                        return '<span class="badge bg-success">' + data + '</span>';
+                    case 'FAILURE':
+                        return '<span class="badge bg-danger">' + data + '</span>';
+                    default:
+                        return '<span class="badge bg-secondary">' + data + '</span>';
+                    }
+                }
+            }, {
+                targets: 4,
+                data: 'args',
+                className: "text-nowrap overflow-auto",
+                visible: isColumnVisible('args'),
+                render: htmlEscapeEntities
+            }, {
+                targets: 5,
+                data: 'kwargs',
+                className: "text-nowrap overflow-auto",
+                visible: isColumnVisible('kwargs'),
+                render: htmlEscapeEntities
+            }, {
+                targets: 6,
+                data: 'result',
+                visible: isColumnVisible('result'),
+                className: "text-nowrap overflow-auto",
+                render: htmlEscapeEntities
+            }, {
+                targets: 7,
+                data: 'result_extended',
+                visible: isColumnVisible('result_extended'),
+                render: function (data, type, full, meta) {
+                    return data;
+                }
+            }],
+        });
+
+    });
+
 }(jQuery));

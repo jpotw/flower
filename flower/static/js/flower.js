@@ -733,6 +733,7 @@ var flower = (function () {
                 targets: 1,
                 data: 'name',
                 visible: isColumnVisible('name'),
+                orderable: false,
                 render: function (data, type, full, meta) {
                     return data;
                 }
@@ -741,6 +742,7 @@ var flower = (function () {
                 data: 'date_done',
                 className: "text-nowrap",
                 visible: isColumnVisible('date_done'),
+                orderable: true,
                 render: function (data, type, full, meta) {
                     if (data) {
                         return format_time(data);
@@ -751,6 +753,7 @@ var flower = (function () {
                 targets: 3,
                 data: 'status',
                 visible: isColumnVisible('status'),
+                orderable: false,
                 className: "text-center",
                 render: function (data, type, full, meta) {
                     switch (data) {
@@ -767,23 +770,27 @@ var flower = (function () {
                 data: 'args',
                 className: "text-nowrap overflow-auto",
                 visible: isColumnVisible('args'),
+                orderable: false,
                 render: htmlEscapeEntities
             }, {
                 targets: 5,
                 data: 'kwargs',
                 className: "text-nowrap overflow-auto",
                 visible: isColumnVisible('kwargs'),
+                orderable: false,
                 render: htmlEscapeEntities
             }, {
                 targets: 6,
                 data: 'result',
                 visible: isColumnVisible('result'),
+                orderable: false,
                 className: "text-nowrap overflow-auto",
                 render: htmlEscapeEntities
             }, {
                 targets: 7,
                 data: 'result_extended',
                 visible: isColumnVisible('result_extended'),
+                orderable: false,
                 render: function (data, type, full, meta) {
                     return data;
                 }

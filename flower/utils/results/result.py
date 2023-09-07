@@ -2,7 +2,7 @@ import datetime
 import heapq
 from collections.abc import Iterator, Iterable
 from functools import total_ordering
-from typing import Any, TypeAlias
+from typing import Any, Sequence, TypeAlias
 
 import dateutil.parser
 import kombu.clocks
@@ -18,7 +18,7 @@ class Result:
         result: Any,
         traceback: Any,
         # fields with default values may be null when Celery's `result_extended=False`
-        args: tuple[Any, ...] | None = None,
+        args: Sequence[Any] | None = None,
         kwargs: dict[str, Any] | None = None,
         name: str | None = None,
         # add graceful handling for extra fields that may have been persisted to the result backend record
@@ -69,15 +69,24 @@ ResultIdWithResultPair: TypeAlias = tuple[str, Result]
 @total_ordering
 class ResultHeapEntry:
     """
-    TODO: document
+    Data structure that represents an individual entry in a heap of Result objects. This class is a container of
+    the actual `Result`, that also allows for greater than/less than comparison against the timestamp of other entries
+    in the heap.
     """
-    def __init__(self, result: Result, *, reverse_ordering: bool):
+    def __init__(self, result: Result, *, is_max_heap: bool):
+        """
+        :param result: The Result object referenced by this heap
+        :param is_max_heap: Reference to whether this entry exists within a min-heap or a max-heap
+        """
         self.result = result
-        self.reverse_ordering = reverse_ordering
+        self.is_max_heap = is_max_heap
         self.timetup = kombu.clocks.timetuple(None, result.date_done.timestamp(), result.task_id, result)
 
     def __lt__(self, other: "ResultHeapEntry") -> bool:
-        if self.reverse_ordering:
+        if self.is_max_heap:
+            # Python's `heapq` functions treat all heap arrays as a min-heap. This means that if we want to work with
+            # a max heap, we need to invert the greater than/less than comparison in order to invert the push/pop
+            # behavior of `heapq`.
             return self.timetup > other.timetup
         else:
             return self.timetup < other.timetup
@@ -88,18 +97,36 @@ class ResultHeapEntry:
 
 class ResultHeap(Iterable[ResultIdWithResultPair]):
     """
-    TODO: document
+    Data structure that maintains a sorted heap of `Result` objects. Results are compared on their `date_done`
+    attribute, and can be stored by `date_done` ASC (min-heap) or DESC (max-heap) depending on the `is_max_heap`
+    parameter passed into `__init__()`. The heap has a maximum size limit for the sake of memory safety, since result
+    backends may have extremely large numbers of task records and loading those all into memory at the same time is
+    liable to cause OOM errors.
     """
-    def __init__(self, *, heap_size_limit: int, reverse_ordering: bool):
+    def __init__(self, *, heap_size_limit: int, is_max_heap: bool):
+        """
+        :param heap_size_limit: Maximum number of results in the heap. This represents both the maximum number of
+          elements held in-memory by this heap, as well as the maximum number of elements yielded during iteration.
+        :param is_max_heap: If true, this heap will behave like a max-heap by sorting Results with large timestamps to
+          the top of the heap. If false, this heap will be a min-heap and will forward Results with smaller timestamps
+          to the top.
+        """
         self._heap_size_limit = heap_size_limit
-        self._reverse_ordering = reverse_ordering
+        self._is_max_heap = is_max_heap
         self._heap: list[ResultHeapEntry] = []
 
     def push(self, result: Result) -> Result | None:
         """
-        TODO: document
+        Add `result` to the heap, popping off the lowest-priority item from the heap if the heap is already at maximum
+        capacity. If `result` would itself be the lowest-priority item in the heap, the heap is not modified and
+        `result` is returned.
+
+        :param result: A `Result` object that we want to push to the heap, if its priority allows us to do so
+        :return: The lowest-priority `Result` that was popped from the heap in order to perform this insert, if
+          pushing an element would exceed the heap's maximum capacity. If the heap is not at maximum capacity when this
+          method is called, will return None because no element needed to be popped.
         """
-        new_heap_entry = ResultHeapEntry(result, reverse_ordering=self._reverse_ordering)
+        new_heap_entry = ResultHeapEntry(result, is_max_heap=self._is_max_heap)
 
         if len(self._heap) >= self._heap_size_limit:
             popped_heap_entry: ResultHeapEntry = heapq.heappushpop(self._heap, new_heap_entry)
@@ -109,6 +136,10 @@ class ResultHeap(Iterable[ResultIdWithResultPair]):
         return None
 
     def __iter__(self) -> Iterator[ResultIdWithResultPair]:
+        """
+        Iterate over a copy of the heap in-order. Whether the order is ASC or DESC is determined by the `is_max_heap`
+        property of this heap.
+        """
         heap_copy = list(self._heap)
         while len(heap_copy) > 0:
             result = heapq.heappop(heap_copy).result

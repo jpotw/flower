@@ -25,8 +25,6 @@ class ResultsDataTable(BaseHandler):
         length = self.get_argument('length', type=int)
         search = self.get_argument('search[value]', type=str)  # TODO: implement search
 
-        column = self.get_argument('order[0][column]', type=int)
-        sort_by = self.get_argument(f'columns[{column}][data]', type=str)  # TODO: implement column-based sort
         reverse_sort_order: bool = self.get_argument('order[0][dir]', type=str) == 'desc'
 
         result_producer = flower.utils.results.stores.store_for_backend(self.capp.backend)
@@ -42,7 +40,9 @@ class ResultsDataTable(BaseHandler):
 
         self.write(dict(draw=draw, data=filtered_results,
                         recordsTotal=c,
-                        recordsFiltered=c))
+                        # TODO: do we need a better way of getting `recordsFiltered` (total count)? Maybe
+                        #   `results_by_timestamp()` should be a generator with an int return type that is total count?
+                        recordsFiltered=len(filtered_results)))
 
     @web.authenticated
     def post(self):

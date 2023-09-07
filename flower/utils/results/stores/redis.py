@@ -18,7 +18,7 @@ class RedisBackendResultsStore(AbstractBackendResultsStore[RedisBackend]):
 
         task_key_prefix = self.backend.task_keyprefix
 
-        heap = ResultHeap(heap_size_limit=heap_size_limit, reverse_ordering=reverse)
+        heap = ResultHeap(heap_size_limit=heap_size_limit, is_max_heap=reverse)
 
         for key in self.backend.client.scan_iter(
             match=task_key_prefix + ("*" if isinstance(task_key_prefix, str) else b"*")

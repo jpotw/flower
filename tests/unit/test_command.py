@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 import celery
 from prometheus_client import Histogram
-from tornado.options import options
+from tornado.options import _Option, options
 
 from flower.command import (apply_env_options, apply_options, print_banner,
                             warn_about_celery_args_used_in_flower_command)
@@ -15,6 +15,17 @@ from tests.unit import AsyncHTTPTestCase
 
 
 class TestFlowerCommand(AsyncHTTPTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._reset_task_runtime_metric_buckets_option()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        cls._reset_task_runtime_metric_buckets_option()
+
     def test_task_runtime_metric_buckets_read_from_cmd_line(self):
         apply_options('flower', argv=['--task_runtime_metric_buckets=1,10,inf'])
         self.assertEqual([1.0, 10.0, float('inf')], options.task_runtime_metric_buckets)
@@ -81,6 +92,10 @@ class TestFlowerCommand(AsyncHTTPTestCase):
             self.get_app(capp=celery_app)
 
             self.assertTrue(autodiscover.called)
+
+    @classmethod
+    def _reset_task_runtime_metric_buckets_option(cls):
+        options._options["task-runtime-metric-buckets"]._value = _Option.UNSET
 
 
 class TestPrintBanner(AsyncHTTPTestCase):

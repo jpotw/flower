@@ -129,9 +129,24 @@ class ResultHeap(Iterable[ResultIdWithResultPair]):
         new_heap_entry = ResultHeapEntry(result, is_max_heap=self._is_max_heap)
 
         if len(self._heap) >= self._heap_size_limit:
-            popped_heap_entry: ResultHeapEntry = heapq.heappushpop(self._heap, new_heap_entry)
+            if new_heap_entry >= self._heap[-1]:
+                # This new entry doesn't belong in the heap. Doing a pop/push here would force this item onto
+                # the heap despite the fact that its score doesn't beat that of any existing heap entry. We really
+                # want something like `pop_push_if_good_enough()`, so we handle that edge case here.
+                return result
+
+            # We use `list.pop()` here instead of `heapq.heappop()` in order to remove an element. While
+            # `.heappushpop()` will maintain the heap invariant, it will actually return the lowest element (in case of
+            # min-heap) or greatest element (in case of max-heap). We want the opposite of that behavior; the
+            # weaker-priority item should be removed in favor of this better-priority item. Thankfully, `heapq`
+            # maintains heaps in sorted Python lists where the front (index 0) item is the strongest-priority item
+            # and the back (index -1) is the weakest-priority item. So a simple `list.pop()` here will remove the
+            # weakest-priority item and allow us to `.heappush()` an item that we know will be preferable.
+            popped_heap_entry: ResultHeapEntry = self._heap.pop()
+            heapq.heappush(self._heap, new_heap_entry)
             return popped_heap_entry.result
 
+        # heap not yet full; can simply push this new entry
         heapq.heappush(self._heap, new_heap_entry)
         return None
 

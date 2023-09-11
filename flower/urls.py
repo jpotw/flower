@@ -7,6 +7,7 @@ from .utils import gen_cookie_secret
 from .views import auth, monitor
 from .views.broker import BrokerView
 from .views.error import NotFoundErrorHandler
+from .views.results import ResultsDataTable, ResultsView, ResultView
 from .views.tasks import TasksDataTable, TasksView, TaskView
 from .views.workers import WorkersView, WorkerView
 
@@ -28,6 +29,9 @@ handlers = [
     url(r"/tasks", TasksView, name='tasks'),
     url(r"/tasks/datatable", TasksDataTable),
     url(r"/broker", BrokerView, name='broker'),
+    url(r"/results", ResultsView, name='results'),
+    url(r"/results/datatable", ResultsDataTable),
+    url(r"/results/(.+)", ResultView, name='result'),
     # Worker API
     (r"/api/workers", workers.ListWorkers),
     (r"/api/worker/shutdown/(.+)", control.WorkerShutDown),

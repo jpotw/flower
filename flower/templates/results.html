@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block navbar %}
+  {% module Template("navbar.html", active_tab="results") %}
+{% end %}
+
+
+{% block container %}
+<input type="hidden" value="{{ time }}" id='time'>
+<input type="hidden" value="{{ columns }}" id='columns'>
+
+<div class="container-fluid mt-3">
+  <table id="results-table" class="table table-bordered table-striped table-hover w-100">
+    <thead>
+    <tr>
+      <th>UUID</th>
+      <th>Name</th>
+      <th>Date Done</th>
+      <th class="text-center">Status</th>
+      <th>args</th>
+      <th>kwargs</th>
+      <th>Result</th>
+      <th>Result Extended?</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for uuid, result in results %}
+    <tr>
+      <td>{{ result.task_id }}</td>
+      <td>{{ result.name }}</td>
+      <td>{{ humanize(result.date_done, type='time') }}</td>
+      <td>{{ result.status }}</td>
+      <td>{{ result.args }}</td>
+      <td>{{ result.kwargs }}</td>
+      <td>
+        {% if result.state == "SUCCESS" %}
+            {{ result.result }}
+        {% elif result.state == "FAILURE" %}
+            {{ result.traceback }}
+        {% end %}
+      </td>
+      <td>{{ result.result_extended }}</td>
+    </tr>
+      {% end %}
+    </tbody>
+  </table>
+</div>
+{% end %}

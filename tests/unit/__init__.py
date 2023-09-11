@@ -1,3 +1,6 @@
+import os
+import unittest
+from distutils.util import strtobool
 from unittest.mock import patch
 from urllib.parse import urlencode
 
@@ -35,3 +38,25 @@ class AsyncHTTPTestCase(tornado.testing.AsyncHTTPTestCase):
 
     def mock_option(self, name, value):
         return patch.object(options.mockable(), name, value)
+
+
+class BackendDependentTestCase(unittest.TestCase):
+    """
+    TestCase base class that will automatically skip all test methods if the `SKIP_BACKEND_DEPENDENT_TESTS` is set
+    to `true`, or some other variation of a "true" representation as determined by `strtobool()`. You should use this
+    when your tests require the presence of some specific backend like Redis, SQLAlchemy, MongoDB, etc. and you want to
+    be able to execute the test suite without depending on these other libraries.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        skip_backend_tests_env_var = 'SKIP_BACKEND_DEPENDENT_TESTS'
+        should_skip: bool = strtobool(os.environ.get(skip_backend_tests_env_var, 'f'))
+        if should_skip:
+            setattr(cls, '__unittest_skip__', True)
+            setattr(
+                cls,
+                '__unittest_skip_why__',
+                f'Skipping this test case due to the "{skip_backend_tests_env_var}" being true',
+            )

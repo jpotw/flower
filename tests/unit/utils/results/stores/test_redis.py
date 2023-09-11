@@ -1,15 +1,15 @@
 import inspect
 import time
-import unittest
 
 import celery.app.task
 from celery.backends.redis import RedisBackend
 
 from flower.utils.results.result import ResultIdWithResultPair, Result
 from flower.utils.results.stores.redis import RedisBackendResultsStore
+from tests.unit import BackendDependentTestCase
 
 
-class TestRedisBackendResultsStore(unittest.TestCase):
+class TestRedisBackendResultsStore(BackendDependentTestCase):
 
     def setUp(self):
         self.app = celery.Celery()

@@ -1,4 +1,6 @@
 -r default.txt
 -r test.txt
 redis>=4.3.6
+SQLAlchemy>=1.4,<2
+psycopg2-binary>=2.9,<3
 pylint

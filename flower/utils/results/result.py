@@ -2,7 +2,7 @@ import datetime
 import heapq
 from collections.abc import Iterator, Iterable
 from functools import total_ordering
-from typing import Any, Sequence, TypeAlias
+from typing import Any, TypeAlias
 
 import dateutil.parser
 import kombu.clocks
@@ -14,12 +14,12 @@ class Result:
         *,
         task_id: str,
         status: str,
-        date_done: str,
+        date_done: str | datetime.datetime,
         result: Any,
         traceback: Any,
         # fields with default values may be null when Celery's `result_extended=False`
-        args: Sequence[Any] | None = None,
-        kwargs: dict[str, Any] | None = None,
+        args: Any = None,
+        kwargs: Any = None,
         name: str | None = None,
         # add graceful handling for extra fields that may have been persisted to the result backend record
         **kw: Any,
@@ -30,7 +30,9 @@ class Result:
         """
         self.task_id = task_id
         self.status = status
-        self.date_done: datetime.datetime = dateutil.parser.parse(date_done)
+        self.date_done: datetime.datetime = (
+            dateutil.parser.parse(date_done) if isinstance(date_done, str) else date_done
+        )
         self.result = result
         self.traceback = traceback
         self.name = name

@@ -5,6 +5,7 @@ RUN apk add --no-cache ca-certificates tzdata && update-ca-certificates
 
 # Install the required packages
 RUN pip install --no-cache-dir redis flower
+RUN pip install --no-cache-dir "SQLAlchemy>=1.4,<2" "psycopg2-binary>=2.9,<3"
 
 # PYTHONUNBUFFERED: Force stdin, stdout and stderr to be totally unbuffered. (equivalent to `python -u`)
 # PYTHONHASHSEED: Enable hash randomization (equivalent to `python -R`)

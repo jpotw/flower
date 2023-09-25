@@ -1,5 +1,6 @@
 import inspect
 import time
+from decimal import Decimal
 
 import celery.app.task
 from celery.backends.redis import RedisBackend
@@ -34,7 +35,7 @@ class TestRedisBackendResultsStore(BackendDependentTestCase):
         self.task_2_id = 'TASK2-95120ce9-470a-419d-a589-d57b14f3f2ca'
         self.backend.mark_as_done(
             task_id=self.task_2_id,
-            result='all good',
+            result=Decimal('22.41'),
             request=celery.app.task.Context(
                 id=self.task_2_id,
                 task=None,  # gets stored as `name`
@@ -145,7 +146,7 @@ class TestRedisBackendResultsStore(BackendDependentTestCase):
 
     def _assert_is_result_2(self, result: Result) -> None:
         self.assertEqual(result.task_id, self.task_2_id)
-        self.assertEqual(result.result, 'all good')
+        self.assertEqual(result.result, Decimal('22.41'))
         self.assertIsNone(result.name)
         self.assertIsNone(result.args)
         self.assertIsNone(result.kwargs)
@@ -155,14 +156,8 @@ class TestRedisBackendResultsStore(BackendDependentTestCase):
 
     def _assert_is_result_3(self, result: Result) -> None:
         self.assertEqual(result.task_id, self.task_3_id)
-        self.assertEqual(
-            result.result,
-            {
-                'exc_message': ['Something bad!'],
-                'exc_module': 'builtins',
-                'exc_type': 'ValueError',
-            },
-        )
+        self.assertIsInstance(result.result, ValueError)
+        self.assertEqual(str(result.result), 'Something bad!')
         self.assertEqual(result.name, 'another.module.task_3_error_task')
         self.assertEqual(result.args, [1, 'hey'])
         self.assertEqual(result.kwargs, {'more': 'stuff'})

@@ -1,4 +1,3 @@
-import json
 from collections.abc import Iterator
 from typing import Any
 
@@ -23,7 +22,7 @@ class RedisBackendResultsStore(AbstractBackendResultsStore[RedisBackend]):
         for key in self.backend.client.scan_iter(
             match=task_key_prefix + ("*" if isinstance(task_key_prefix, str) else b"*")
         ):
-            result_data: dict[str, Any] = json.loads(self.backend.client.get(key))
+            result_data: dict[str, Any] = self.backend.decode_result(self.backend.client.get(key))
             result = Result(**result_data)
             heap.push(result)
 

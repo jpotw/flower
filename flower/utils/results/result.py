@@ -58,8 +58,8 @@ class Result:
             "task_id": self.task_id,
             "status": self.status,
             "date_done": self.date_done.timestamp(),
-            "args": repr(self.args),
-            "kwargs": repr(self.kwargs),
+            "args": self.args if isinstance(self.args, str) else repr(self.args),
+            "kwargs": self.kwargs if isinstance(self.kwargs, str) else repr(self.kwargs),
             "result": repr(self.result),
             "traceback": str(self.traceback),
         }

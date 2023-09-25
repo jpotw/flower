@@ -268,21 +268,21 @@ class TestDatabaseBackendResultsStoreDeserializeBinaryColumnValue(DatabaseBacken
 
     def test_original_byte_string_returned_when_content_type_missing(self) -> None:
         self.app.conf.accept_content = ['something_not_known']
-        self.assertIs(
+        self.assertEqual(
             self.results_store.deserialize_binary_column_value(self.json_args),
-            self.json_args,
+            'Failed to deserialize binary value: ' + repr(self.json_args),
         )
-        self.assertIs(
+        self.assertEqual(
             self.results_store.deserialize_binary_column_value(self.json_kwargs),
-            self.json_kwargs,
+            'Failed to deserialize binary value: ' + repr(self.json_kwargs),
         )
-        self.assertIs(
+        self.assertEqual(
             self.results_store.deserialize_binary_column_value(self.pickled_args),
-            self.pickled_args,
+            'Failed to deserialize binary value: ' + repr(self.pickled_args),
         )
-        self.assertIs(
+        self.assertEqual(
             self.results_store.deserialize_binary_column_value(self.pickled_kwargs),
-            self.pickled_kwargs,
+            'Failed to deserialize binary value: ' + repr(self.pickled_kwargs),
         )
 
 

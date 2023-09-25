@@ -78,7 +78,8 @@ class DatabaseBackendResultsStore(AbstractBackendResultsStore[DatabaseBackend]):
         To work around this limitation, this method takes guesses at the serialization of `value` based on whatever
         serializers are available in the active `result_accept_content` or `accept_content` Celery config setting.
         Each serializer will attempt deserialization, and if one succeeds, we return the deserialized value immediately.
-        If all deserialization attempts fail, we will gracefully return the original bytes value.
+        If all deserialization attempts fail, we will gracefully return the original bytes value with a prefix message
+        explaining that deserialization failed.
 
         TODO: currently this method only attempts deserialization with JSON and pickle. We should support more built-in
           content types, and potentially allow for deserialization using custom encodings. We chose to limit the
@@ -103,5 +104,5 @@ class DatabaseBackendResultsStore(AbstractBackendResultsStore[DatabaseBackend]):
             except pickle.UnpicklingError:
                 pass
 
-        # couldn't deserialize; just fall back to the original byte string
-        return value
+        # couldn't deserialize; just fall back to an error message plus the `repr()` of the original byte string
+        return 'Failed to deserialize binary value: ' + repr(value)

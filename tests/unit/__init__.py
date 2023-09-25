@@ -120,7 +120,7 @@ class DatabaseBackendDependentTestCase(BackendDependentTestCase):
             def prepare_models(self, engine):
                 with engine.connect() as conn:
                     if not conn.dialect.has_schema(conn, test_schema_name):
-                        engine.execute(sqlalchemy.schema.CreateSchema(test_schema_name))
+                        conn.execute(sqlalchemy.schema.CreateSchema(test_schema_name))
                 return super().prepare_models(engine)
 
         with self.backend.ResultSession(session_manager=CreateSchemaSessionManager()):

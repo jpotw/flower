@@ -39,7 +39,7 @@ services:
       - redis
   flower:
     build: ./
-    command: celery -A tasks flower
+    command: celery -A tasks flower --persistent=True
     volumes:
       - ./examples:/data
     working_dir: /data
